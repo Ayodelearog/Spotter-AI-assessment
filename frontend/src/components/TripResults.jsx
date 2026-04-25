@@ -8,7 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import MapPanel from "./MapPanel";
-import LogSheet from "./LogSheet";
+import DigitalLogSheet from "./DigitalLogSheet";
 
 function MetricCard({ label, value }) {
   return (
@@ -54,21 +54,37 @@ export default function TripResults({ result }) {
             <CardContent sx={{ p: 3 }}>
               <Stack spacing={2}>
                 <Typography variant="h4">Dispatch summary</Typography>
-                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" overFlow={scrollX}>
+                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
                   {assumptions.map((assumption) => (
-                    <Chip key={assumption} label={assumption} variant="outlined" />
+                    <Chip
+                      key={assumption}
+                      label={assumption}
+                      variant="outlined"
+                      sx={{
+                        height: "auto",
+                        maxWidth: "100%",
+                        py: 0.5,
+                        "& .MuiChip-label": {
+                          whiteSpace: "normal",
+                          overflowWrap: "anywhere",
+                          lineHeight: 1.3,
+                          display: "block",
+                        },
+                      }}
+                    />
                   ))}
                 </Stack>
                 <Divider />
                 {summary.route.map((item) => (
-                  <Stack
-                    key={item.label}
-                    direction="row"
-                    justifyContent="space-between"
-                    gap={2}
-                  >
-                    <Typography color="text.secondary">{item.label}</Typography>
-                    <Typography sx={{ textAlign: "right", fontWeight: 700 }}>
+                  <Stack key={item.label} spacing={0.5}>
+                    <Typography
+                      variant="overline"
+                      color="text.secondary"
+                      sx={{ lineHeight: 1.2 }}
+                    >
+                      {item.label}
+                    </Typography>
+                    <Typography sx={{ fontWeight: 700, wordBreak: "break-word" }}>
                       {item.value}
                     </Typography>
                   </Stack>
@@ -99,7 +115,7 @@ export default function TripResults({ result }) {
         <Grid container spacing={3}>
           {logSheets.map((sheet) => (
             <Grid key={sheet.date} size={{ xs: 12, xl: 6 }}>
-              <LogSheet sheet={sheet} route={summary.route} />
+              <DigitalLogSheet sheet={sheet} />
             </Grid>
           ))}
         </Grid>

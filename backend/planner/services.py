@@ -444,9 +444,6 @@ class TripPlanner:
         }
         remarks = []
         total_miles = 0.0
-        active_items = [item for item in items if item["label"] != "Off duty"]
-        first_active = active_items[0] if active_items else None
-        last_active = active_items[-1] if active_items else None
 
         for item in items:
             totals[item["status"]] += item["hours"]
@@ -468,12 +465,8 @@ class TripPlanner:
                 "month": day_start.strftime("%m"),
                 "day": day_start.strftime("%d"),
                 "year": day_start.strftime("%Y"),
-                "fromLocation": self._short_location(
-                    first_active["location"] if first_active else self.current_location
-                ),
-                "toLocation": self._short_location(
-                    last_active["location"] if last_active else self.dropoff_location
-                ),
+                "fromLocation": self._short_location(self.current_location),
+                "toLocation": self._short_location(self.dropoff_location),
                 "carrierName": self.assets["carrier_name"],
                 "mainOfficeAddress": self.assets["main_office_address"],
                 "homeTerminalAddress": self.assets["home_terminal_address"],

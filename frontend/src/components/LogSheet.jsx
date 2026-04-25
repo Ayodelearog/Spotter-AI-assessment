@@ -1,10 +1,10 @@
 import { Card, CardContent, Divider, Grid, Stack, Typography } from "@mui/material";
 
 const STATUS_ROWS = {
-  off_duty: 190,
-  sleeper: 211,
-  driving: 231,
-  on_duty: 252,
+  off_duty: 192.5,
+  sleeper: 209.5,
+  driving: 226.5,
+  on_duty: 244,
 };
 
 const STATUS_COLORS = {
@@ -15,10 +15,10 @@ const STATUS_COLORS = {
 };
 
 const GRAPH = {
-  left: 57,
-  right: 461,
-  top: 181,
-  bottom: 261,
+  left: 64,
+  right: 454,
+  top: 184,
+  bottom: 253,
 };
 
 const HOUR_WIDTH = (GRAPH.right - GRAPH.left) / 24;
@@ -75,16 +75,18 @@ function overlayText(x, y, value, options = {}) {
   );
 }
 
-export default function LogSheet({ sheet, route }) {
+export default function LogSheet({ sheet }) {
   const path = buildPath(sheet.segments);
   const { header } = sheet;
+  const onDuty = sheet.totals.onDuty;
   const recap = [
-    { x: 78, value: sheet.totals.onDuty.toFixed(1) },
-    { x: 162, value: sheet.totals.driving.toFixed(1) },
-    { x: 241, value: Math.max(70 - sheet.totals.onDuty, 0).toFixed(1) },
-    { x: 339, value: sheet.totals.onDuty.toFixed(1) },
-    { x: 412, value: Math.max(60 - sheet.totals.onDuty, 0).toFixed(1) },
-    { x: 488, value: sheet.totals.offDuty.toFixed(1) },
+    { x: 88, value: onDuty.toFixed(1) },
+    { x: 167, value: onDuty.toFixed(1) },
+    { x: 208, value: Math.max(70 - onDuty, 0).toFixed(1) },
+    { x: 248, value: onDuty.toFixed(1) },
+    { x: 325, value: onDuty.toFixed(1) },
+    { x: 365, value: Math.max(60 - onDuty, 0).toFixed(1) },
+    { x: 406, value: onDuty.toFixed(1) },
   ];
 
   return (
@@ -110,19 +112,19 @@ export default function LogSheet({ sheet, route }) {
                 </clipPath>
               </defs>
 
-              {overlayText(167, 26, header.month, { anchor: "middle" })}
-              {overlayText(210, 26, header.day, { anchor: "middle" })}
-              {overlayText(257, 26, header.year, { anchor: "middle" })}
-              {overlayText(65, 47, header.fromLocation)}
-              {overlayText(261, 47, header.toLocation)}
-              {overlayText(60, 90, String(header.totalDrivingToday), { anchor: "middle" })}
-              {overlayText(146, 90, String(header.totalMileageToday), { anchor: "middle" })}
-              {overlayText(308, 88, header.carrierName, { anchor: "middle" })}
-              {overlayText(308, 111, header.mainOfficeAddress, { anchor: "middle" })}
-              {overlayText(308, 134, header.homeTerminalAddress, { anchor: "middle" })}
-              {overlayText(143, 134, header.vehicleNumbers, { anchor: "middle", fontSize: 7 })}
-              {overlayText(35, 363, header.shippingDocument, { fontSize: 7 })}
-              {overlayText(35, 394, header.shipperCommodity, { fontSize: 7 })}
+              {overlayText(187, 18, header.month, { anchor: "middle" })}
+              {overlayText(229, 18, header.day, { anchor: "middle" })}
+              {overlayText(271, 18, header.year, { anchor: "middle" })}
+              {overlayText(66, 46, header.fromLocation)}
+              {overlayText(260, 46, header.toLocation)}
+              {overlayText(94, 85, String(header.totalDrivingToday), { anchor: "middle" })}
+              {overlayText(178, 85, String(header.totalMileageToday), { anchor: "middle" })}
+              {overlayText(346, 77, header.carrierName, { anchor: "middle" })}
+              {overlayText(346, 97, header.mainOfficeAddress, { anchor: "middle" })}
+              {overlayText(346, 118, header.homeTerminalAddress, { anchor: "middle" })}
+              {overlayText(134, 110, header.vehicleNumbers, { anchor: "middle", fontSize: 7 })}
+              {overlayText(35, 350, header.shippingDocument, { fontSize: 7 })}
+              {overlayText(35, 378, header.shipperCommodity, { fontSize: 7 })}
 
               <g clipPath={`url(#graph-clip-${sheet.date})`}>
                 <path
@@ -164,15 +166,12 @@ export default function LogSheet({ sheet, route }) {
               })}
 
               {sheet.remarks.slice(0, 4).map((remark, index) =>
-                overlayText(88, 287 + index * 12, remark, { fontSize: 6.5 }),
+                overlayText(88, 275 + index * 12, remark, { fontSize: 6.5 }),
               )}
 
               {recap.map((item, index) =>
-                overlayText(item.x, 463, item.value, { anchor: "middle", fontSize: 7, fontWeight: 700 }),
+                overlayText(item.x, 450, item.value, { anchor: "middle", fontSize: 7, fontWeight: 700 }),
               )}
-              {overlayText(91, 477, route[0]?.value ?? "", { anchor: "middle", fontSize: 6 })}
-              {overlayText(342, 477, route[1]?.value ?? "", { anchor: "middle", fontSize: 6 })}
-              {overlayText(445, 477, route[2]?.value ?? "", { anchor: "middle", fontSize: 6 })}
             </svg>
           </div>
 
