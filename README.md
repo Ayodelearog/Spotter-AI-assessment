@@ -78,7 +78,12 @@ Frontend build:
 npm run build
 ```
 
+## Architecture and deployment
+
+- [docs/architecture.md](docs/architecture.md) — system diagram, request lifecycle, response shape, and a file-by-file map.
+- [docs/deployment.md](docs/deployment.md) — step-by-step Vercel (frontend) + Render (backend) deploy guide.
+
 ## Notes
 
 - The backend has city fallbacks for a few sample locations so the demo still works if geocoding is temporarily unavailable.
-- For real deployment, the frontend can go on Vercel and the Django backend can go on Render, Railway, or another Python host.
+- Production config is environment-driven: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, and `CORS_ALLOWED_ORIGINS` all read from the environment with safe local-dev defaults.
