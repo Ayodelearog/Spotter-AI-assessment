@@ -21,24 +21,13 @@ The app returns:
 - Backend: Django
 - External services: Nominatim for geocoding, OSRM for routing
 
-## Django structure explained
+## Backend layout
 
-If Django is new to you, these are the important files:
-
-- `backend/route_planner/settings.py`
-  This is the backend configuration file. It tells Django which apps are enabled and what middleware should run on every request.
-
-- `backend/route_planner/urls.py`
-  This is the top-level URL router. It sends `/api/...` requests into the planner app.
-
-- `backend/planner/views.py`
-  This is the HTTP layer. It receives the POST request from React and returns JSON.
-
-- `backend/planner/services.py`
-  This is the core business logic. It geocodes locations, fetches the route, applies HOS assumptions, and builds the log-sheet data.
-
-- `backend/planner/tests.py`
-  These are lightweight backend tests around the log-sheet calculations.
+- `backend/route_planner/settings.py` — project configuration: installed apps and the middleware chain applied to every request.
+- `backend/route_planner/urls.py` — top-level URL router; forwards `/api/...` traffic into the planner app.
+- `backend/planner/views.py` — HTTP layer; accepts the POST from the frontend and returns JSON.
+- `backend/planner/services.py` — core domain logic: geocoding, routing, HOS scheduling, and log-sheet rendering.
+- `backend/planner/tests.py` — backend tests covering the log-sheet calculations.
 
 ## Assumptions implemented
 
@@ -84,7 +73,7 @@ cd backend
 ```
 
 Frontend build:
-`
+
 ```bash
 npm run build
 ```

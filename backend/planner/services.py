@@ -60,6 +60,7 @@ class TripPlanner:
         self.route_points = []
         self.schedule = []
         self.stop_markers = []
+        self._reverse_cache: dict[tuple[float, float], str] = {}
         self.assets = {
             "carrier_name": "Spotter Dispatch Demo",
             "main_office_address": "Remote Operations Hub",
@@ -163,6 +164,48 @@ class TripPlanner:
 
         raise PlanningError(f"Unable to geocode '{query}'. Try a more specific city or address.")
 
+    def _reverse_geocode(self, coordinates: dict | None) -> str:
+        if not coordinates or "lat" not in coordinates or "lng" not in coordinates:
+            return "En route"
+        key = (round(coordinates["lat"], 2), round(coordinates["lng"], 2))
+        if key in self._reverse_cache:
+            return self._reverse_cache[key]
+
+        url = (
+            "https://nominatim.openstreetmap.org/reverse?"
+            f"lat={key[0]}&lon={key[1]}&format=jsonv2&addressdetails=1&zoom=10"
+        )
+        request = Request(url, headers={"User-Agent": "spotter-assessment/1.0"})
+        label = "En route"
+        try:
+            with urlopen(request, timeout=15) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+                address = payload.get("address", {}) or {}
+                city = (
+                    address.get("city")
+                    or address.get("town")
+                    or address.get("village")
+                    or address.get("hamlet")
+                    or address.get("county")
+                    or ""
+                )
+                iso = address.get("ISO3166-2-lvl4", "")
+                if iso.startswith("US-") and len(iso) == 5:
+                    state = iso[3:]
+                else:
+                    state = address.get("state", "")
+                if city and state:
+                    label = f"{city}, {state}"
+                elif city:
+                    label = city
+                elif state:
+                    label = state
+        except Exception:
+            pass
+
+        self._reverse_cache[key] = label
+        return label
+
     def _route_between(self, start: dict, end: dict, leg_id: str) -> dict:
         url = (
             "https://router.project-osrm.org/route/v1/driving/"
@@ -255,12 +298,16 @@ class TripPlanner:
             drive_miles = speed * drive_available
             start_time = state.current_time
             end_time = start_time + timedelta(hours=drive_available)
+            segment_start_coords = (
+                leg["start"] if progress_miles == 0 else self._point_for_progress(leg, progress_miles)
+            )
 
             self.schedule.append(
                 {
                     "status": STATUS_DRIVING,
                     "label": leg_label,
                     "location": self._progress_label(leg_label, progress_miles + drive_miles, leg["distance_miles"]),
+                    "coordinates": segment_start_coords,
                     "start": start_time,
                     "end": end_time,
                     "miles": round(drive_miles, 1),
@@ -339,6 +386,7 @@ class TripPlanner:
                 "status": STATUS_ON,
                 "label": label,
                 "location": location_label,
+                "coordinates": coordinates,
                 "start": start_time,
                 "end": end_time,
                 "miles": 0.0,
@@ -362,6 +410,7 @@ class TripPlanner:
                 "status": STATUS_OFF,
                 "label": label,
                 "location": coordinates.get("label", "Rest stop"),
+                "coordinates": coordinates,
                 "start": start_time,
                 "end": end_time,
                 "miles": 0.0,
@@ -418,6 +467,7 @@ class TripPlanner:
                 item = self._sheet_item(item_start, item_end, entry["status"], entry["label"])
                 duration_hours = max((entry["end"] - entry["start"]).total_seconds() / 3600, 0.01)
                 item["location"] = entry.get("location", "")
+                item["coordinates"] = entry.get("coordinates")
                 item["miles"] = round(
                     entry.get("miles", 0.0)
                     * ((item_end - item_start).total_seconds() / 3600)
@@ -444,6 +494,8 @@ class TripPlanner:
         }
         remarks = []
         total_miles = 0.0
+        remark_events = []
+        prev_status = None
 
         for item in items:
             totals[item["status"]] += item["hours"]
@@ -451,10 +503,22 @@ class TripPlanner:
             if item["label"] != "Off duty":
                 remarks.append(f"{self._format_time(item['start'])} - {item['label']}")
 
+            if item["status"] != prev_status and item["label"] != "Off duty":
+                location = self._reverse_geocode(item.get("coordinates"))
+                remark_events.append(
+                    {
+                        "hour": item["startHour"],
+                        "location": location,
+                        "label": item["label"],
+                    }
+                )
+            prev_status = item["status"]
+
         return {
             "date": day_start.strftime("%Y-%m-%d"),
             "displayDate": day_start.strftime("%b %d, %Y"),
             "segments": items,
+            "remarkEvents": remark_events,
             "totals": {
                 "offDuty": round(totals[STATUS_OFF], 2),
                 "sleeper": round(totals[STATUS_SLEEPER], 2),
@@ -471,7 +535,7 @@ class TripPlanner:
                 "mainOfficeAddress": self.assets["main_office_address"],
                 "homeTerminalAddress": self.assets["home_terminal_address"],
                 "vehicleNumbers": self.assets["vehicle_numbers"],
-                "totalDrivingToday": round(totals[STATUS_DRIVING], 1),
+                "totalDrivingToday": round(total_miles, 0),
                 "totalMileageToday": round(total_miles, 0),
                 "shippingDocument": self.assets["shipping_document"],
                 "shipperCommodity": f"{self._short_location(self.pickup_location)} to {self._short_location(self.dropoff_location)}",

@@ -54,23 +54,22 @@ export default function TripResults({ result }) {
             <CardContent sx={{ p: 3 }}>
               <Stack spacing={2}>
                 <Typography variant="h4">Dispatch summary</Typography>
-                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  useFlexGap
+                  sx={{
+                    flexWrap: "nowrap",
+                    overflowX: "auto",
+                    pb: 1,
+                  }}
+                >
                   {assumptions.map((assumption) => (
                     <Chip
                       key={assumption}
                       label={assumption}
                       variant="outlined"
-                      sx={{
-                        height: "auto",
-                        maxWidth: "100%",
-                        py: 0.5,
-                        "& .MuiChip-label": {
-                          whiteSpace: "normal",
-                          overflowWrap: "anywhere",
-                          lineHeight: 1.3,
-                          display: "block",
-                        },
-                      }}
+                      sx={{ flexShrink: 0 }}
                     />
                   ))}
                 </Stack>

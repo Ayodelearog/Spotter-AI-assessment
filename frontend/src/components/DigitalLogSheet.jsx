@@ -10,7 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 
-const VB = { w: 1100, h: 820 };
+const VB = { w: 1100, h: 880 };
 
 const G = {
   left: 110,
@@ -25,10 +25,10 @@ const HOUR_W = (G.right - G.left) / 24;
 
 const STATUS_INDEX = { off_duty: 0, sleeper: 1, driving: 2, on_duty: 3 };
 const ROW_LABELS = [
-  "1. Off Duty",
-  "2. Sleeper Berth",
-  "3. Driving",
-  "4. On Duty (not driving)",
+  ["1. Off Duty"],
+  ["2. Sleeper Berth"],
+  ["3. Driving"],
+  ["4. On Duty", "(not driving)"],
 ];
 
 const STATUS_COLOR = {
@@ -201,20 +201,29 @@ function GridSection({ totals }) {
     </text>
   ));
 
-  // Row labels on left
-  const rowLabels = ROW_LABELS.map((label, i) => (
-    <text
-      key={`rlabel-${i}`}
-      x={G.left - 6}
-      y={G.top + (i + 0.5) * ROW_H + 4}
-      fontSize="11"
-      fontWeight="600"
-      textAnchor="end"
-      fill="#111827"
-    >
-      {label}
-    </text>
-  ));
+  // Row labels on left (multi-line via tspan)
+  const rowLabels = ROW_LABELS.map((lines, i) => {
+    const centerY = G.top + (i + 0.5) * ROW_H;
+    const lineHeight = 12;
+    const firstY = centerY + 4 - ((lines.length - 1) * lineHeight) / 2;
+    return (
+      <text
+        key={`rlabel-${i}`}
+        x={G.left - 6}
+        y={firstY}
+        fontSize="11"
+        fontWeight="600"
+        textAnchor="end"
+        fill="#111827"
+      >
+        {lines.map((line, li) => (
+          <tspan key={li} x={G.left - 6} dy={li === 0 ? 0 : lineHeight}>
+            {line}
+          </tspan>
+        ))}
+      </text>
+    );
+  });
 
   // Total Hours column header + values
   const totalsByRow = [
@@ -374,32 +383,105 @@ function InfoSection({ header }) {
   );
 }
 
-function RemarksSection({ remarks }) {
+function truncate(text, max) {
+  if (!text) return "";
+  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+}
+
+function RemarksBand({ events, clipId }) {
+  const top = G.bottom;
+  const bandBottom = top + 130;
+  const tickEnd = top + 10;
+  const labelY = top + 14;
+  const MAX_LOC_CHARS = 16;
+  const MAX_LABEL_CHARS = 20;
+
   return (
     <g>
-      <text x={40} y={440} fontSize="14" fontWeight="700" fill="#111827">
+      <defs>
+        <clipPath id={clipId}>
+          <rect
+            x={G.left}
+            y={top}
+            width={G.right - G.left}
+            height={bandBottom - top}
+          />
+        </clipPath>
+      </defs>
+      <line
+        x1={G.left}
+        x2={G.right}
+        y1={bandBottom}
+        y2={bandBottom}
+        stroke="#111827"
+        strokeWidth="0.8"
+      />
+      <line
+        x1={G.left}
+        x2={G.left}
+        y1={top}
+        y2={bandBottom}
+        stroke="#111827"
+        strokeWidth="0.8"
+      />
+      <line
+        x1={G.right}
+        x2={G.right}
+        y1={top}
+        y2={bandBottom}
+        stroke="#111827"
+        strokeWidth="0.8"
+      />
+      <text x={G.left - 6} y={top + 16} fontSize="10" fontWeight="700" textAnchor="end" fill="#111827">
         Remarks
       </text>
-      <rect
-        x={40}
-        y={450}
-        width={1020}
-        height={90}
-        stroke="#111827"
-        strokeWidth="1"
-        fill="none"
-      />
-      {remarks.slice(0, 6).map((r, i) => (
-        <text
-          key={`remark-${i}`}
-          x={50}
-          y={470 + i * 14}
-          fontSize="11"
-          fill="#111827"
-        >
-          • {r}
-        </text>
-      ))}
+      <g clipPath={`url(#${clipId})`}>
+        {events.map((ev, i) => {
+          const x = hourX(ev.hour);
+          const startX = x + 2;
+          const startY = labelY;
+          const locationFont = 10;
+          const actionFont = 8;
+          const location = truncate(ev.location, MAX_LOC_CHARS);
+          const action = truncate(ev.label, MAX_LABEL_CHARS);
+          const locationWidth = location.length * locationFont * 0.55;
+          return (
+            <g key={`evt-${i}`}>
+              <line x1={x} x2={x} y1={top} y2={tickEnd} stroke="#111827" strokeWidth="0.9" />
+              <g transform={`rotate(60 ${startX} ${startY})`}>
+                <text
+                  x={startX}
+                  y={startY}
+                  fontSize={locationFont}
+                  fontWeight="700"
+                  textAnchor="start"
+                  fill="#111827"
+                >
+                  {location}
+                </text>
+                <line
+                  x1={startX}
+                  x2={startX + locationWidth}
+                  y1={startY + 2}
+                  y2={startY + 2}
+                  stroke="#111827"
+                  strokeWidth="0.6"
+                />
+                <text
+                  x={startX}
+                  y={startY + 12}
+                  fontSize={actionFont}
+                  fontWeight="500"
+                  textAnchor="start"
+                  fill="#374151"
+                >
+                  {action}
+                </text>
+              </g>
+            </g>
+          );
+        })}
+      </g>
     </g>
   );
 }
@@ -407,21 +489,21 @@ function RemarksSection({ remarks }) {
 function ShippingSection({ header }) {
   return (
     <g>
-      <text x={40} y={564} fontSize="11" fontWeight="700" fill="#111827">
+      <text x={40} y={584} fontSize="11" fontWeight="700" fill="#111827">
         Shipping Documents:
       </text>
-      <FieldLine x1={170} x2={520} y={564} value={header.shippingDocument} />
-      <text x={540} y={564} fontSize="11" fontWeight="700" fill="#111827">
+      <FieldLine x1={170} x2={520} y={584} value={header.shippingDocument} />
+      <text x={540} y={584} fontSize="11" fontWeight="700" fill="#111827">
         DVL or Manifest No.:
       </text>
-      <FieldLine x1={690} x2={1060} y={564} value="" />
+      <FieldLine x1={690} x2={1060} y={584} value="" />
 
-      <text x={40} y={596} fontSize="11" fontWeight="700" fill="#111827">
+      <text x={40} y={616} fontSize="11" fontWeight="700" fill="#111827">
         Shipper &amp; Commodity:
       </text>
-      <FieldLine x1={170} x2={1060} y={596} value={header.shipperCommodity} />
+      <FieldLine x1={170} x2={1060} y={616} value={header.shipperCommodity} />
 
-      <text x={40} y={624} fontSize="10" fontStyle="italic" fill="#374151">
+      <text x={40} y={644} fontSize="10" fontStyle="italic" fill="#374151">
         Enter name of place you reported and where released from work and when and where each change of duty occurred. Use time standard of home terminal.
       </text>
     </g>
@@ -431,7 +513,7 @@ function ShippingSection({ header }) {
 function RecapSection({ totals }) {
   const onDuty = totals.onDuty;
   const lines34 = totals.driving + totals.onDuty;
-  const top = 660;
+  const top = 700;
   const valueY = top + 56;
   const lineY = top + 60;
   const labelY = top + 76;
@@ -617,7 +699,7 @@ export default function DigitalLogSheet({ sheet }) {
                 )}
               </g>
 
-              <RemarksSection remarks={sheet.remarks} />
+              <RemarksBand events={sheet.remarkEvents ?? []} clipId={`remarks-clip-${sheet.date}`} />
               <ShippingSection header={header} />
               <RecapSection totals={sheet.totals} />
             </svg>
