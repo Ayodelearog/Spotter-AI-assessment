@@ -62,13 +62,14 @@ The order matters: deploy the backend first so you have its URL, then deploy the
 
 ## 3. Lock CORS
 
-Now that you have the Vercel URL, go back to Render → your service → Environment, and set:
+Now that you have the Vercel URL, go back to Render → your service → Environment, and set **either** of:
 
-| Key | Value |
-|---|---|
-| `CORS_ALLOWED_ORIGINS` | `https://spotter-ai-assessment.vercel.app` (and any preview URL pattern you want to allow) |
+| Key | Value | When to use |
+|---|---|---|
+| `CORS_ALLOWED_ORIGINS` | `https://spotter-ai-assessment.vercel.app` (comma-separate to add more) | One or two fixed domains |
+| `CORS_ALLOWED_ORIGIN_REGEXES` | `^https://.*\.vercel\.app$` | Allow all Vercel subdomains, including per-deployment preview URLs |
 
-Save → Render redeploys automatically. The backend now only accepts cross-origin requests from your Vercel domain.
+Save → Render redeploys automatically. The backend now only accepts cross-origin requests from your allowed domains.
 
 ## 4. Verify
 

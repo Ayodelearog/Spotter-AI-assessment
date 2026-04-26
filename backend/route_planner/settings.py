@@ -123,8 +123,15 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 _cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "").strip()
-if _cors_origins:
-    CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(",") if o.strip()]
+_cors_origin_regexes = os.environ.get("CORS_ALLOWED_ORIGIN_REGEXES", "").strip()
+
+if _cors_origins or _cors_origin_regexes:
+    if _cors_origins:
+        CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins.split(",") if o.strip()]
+    if _cors_origin_regexes:
+        CORS_ALLOWED_ORIGIN_REGEXES = [
+            r.strip() for r in _cors_origin_regexes.split(",") if r.strip()
+        ]
 else:
     CORS_ALLOW_ALL_ORIGINS = True
 
