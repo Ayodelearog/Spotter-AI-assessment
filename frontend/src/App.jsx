@@ -49,7 +49,7 @@ export default function App() {
           >
             <Stack spacing={2} sx={{ maxWidth: 760 }}>
               <Chip
-                label="React + Django assessment"
+                label="React + Django"
                 color="secondary"
                 sx={{ alignSelf: "flex-start", fontWeight: 700 }}
               />
